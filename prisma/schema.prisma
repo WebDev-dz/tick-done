@@ -1,0 +1,101 @@
+
+
+datasource db {
+  provider  = "sqlite"
+  url       = "file:./app.db"
+//   directUrl = env("EXPO_PUBLIC_DIRECT_URL")
+}
+        
+
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["reactNative"]
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  email     String   @unique
+  password  String
+  habits    Habit[]
+  todos     Todo[]
+  categories Category[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Category {
+  id           String     @id @default(cuid())
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String
+  name         String
+  type         CategoryType @default(BOTH)
+  colorCode    String     @default("#3498db")
+  icon         String?
+  isDefault    Boolean    @default(false)
+  habits       Habit[]
+  todos        Todo[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([userId, name])
+}
+
+enum CategoryType {
+  HABIT
+  TODO
+  BOTH
+}
+
+model Habit {
+  id          String     @id @default(cuid())
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  name        String
+  frequency   Frequency
+  category    Category?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  categoryId  String?
+  logs        HabitLog[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Todo {
+  id          String     @id @default(cuid())
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  name        String
+  dueDate     DateTime?
+  isCompleted Boolean    @default(false)
+  category    Category?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  categoryId  String?
+  logs        TodoLog[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model HabitLog {
+  id         String   @id @default(cuid())
+  habit      Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  habitId    String
+  date       DateTime
+  isCompleted Boolean @default(false)
+  notes      String?
+  createdAt  DateTime @default(now())
+}
+
+model TodoLog {
+  id         String   @id @default(cuid())
+  todo       Todo     @relation(fields: [todoId], references: [id], onDelete: Cascade)
+  todoId     String
+  date       DateTime
+  isCompleted Boolean @default(false)
+  notes      String?
+  createdAt  DateTime @default(now())
+}
+
+enum Frequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
